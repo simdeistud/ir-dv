@@ -12,27 +12,31 @@ class Posting:
     def __gt__(self, other):
         return self.docID > other.docID
 
+    def __hash__(self):
+        return hash(self.docID)
+
     def __repr__(self):
         return str(self.docID)
 
 class PostingList:
     def __init__(self):
-        self.postings = []
+        self.postings = set[Posting]()
 
     def add_posting(self, posting: Posting):
-        self.postings.append(posting)
-        self.postings = sorted(self.postings)
+        self.postings.add(posting)
+        self.postings = self.postings
 
     def merge(self, other: PostingList):
-        self.postings.extend(other.postings)
-        self.postings = sorted(set(self.postings))
+        self.postings.union(other.postings)
+        self.postings = self.postings
 
     def __repr__(self):
         return str(self.postings)
 
 class Index:
     def __init__(self):
-        self.terms = { str : PostingList }
+        self.terms = { str : PostingList() }
+        self.docIDs = set[Posting]()
 
     def build(self, corpus: Corpus):
         for document in corpus.documents:
@@ -42,6 +46,7 @@ class Index:
                 if term not in self.terms:
                     self.terms[term] = PostingList()
                 self.terms[term].add_posting(Posting(document.docID))
+            self.docIDs.add(Posting(document.docID))
 
     def load(self, path: str):
         with open(path) as f:
