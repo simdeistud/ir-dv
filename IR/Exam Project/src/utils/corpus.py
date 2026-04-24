@@ -20,6 +20,8 @@ def parse_NTIS(path: str) -> list[Document]:
                 print(f"adding document to corpus [{line[2:].strip()}]")
                 if doc:
                     # finalize previous document
+                    for k in doc:
+                        doc[k] = doc[k].strip()
                     documents.append(Document(doc["I"], doc["T"], doc["A"], doc["B"], doc["W"]))
                 doc = {"I": line[2:].strip()}
                 current_tag = "I"
