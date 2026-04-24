@@ -33,7 +33,7 @@ class IR:
         raise TypeError(f"Unknown node {query}")
 
     def _term(self, term: str) -> set[Posting]:
-        return self.index.terms[term].postings
+        return self.index.terms.get(term, None)
 
     def _not(self, p: set[Posting]) -> set[Posting]:
         return self.index.docIDs - p
