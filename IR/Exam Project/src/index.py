@@ -12,7 +12,7 @@ class Posting:
     def __gt__(self, other):
         return self.docID > other.docID
 
-    def __str__(self):
+    def __repr__(self):
         return str(self.docID)
 
 class PostingList:
@@ -21,11 +21,14 @@ class PostingList:
 
     def add_posting(self, posting: Posting):
         self.postings.append(posting)
-        self.postings = sorted(self.postings, key=lambda posting: posting.docID)
+        self.postings = sorted(self.postings)
 
     def merge(self, other: PostingList):
         self.postings.extend(other.postings)
-        self.postings = sorted(set(self.postings), key=lambda posting: posting.docID)
+        self.postings = sorted(set(self.postings))
+
+    def __repr__(self):
+        return str(self.postings)
 
 class Index:
     def __init__(self):
