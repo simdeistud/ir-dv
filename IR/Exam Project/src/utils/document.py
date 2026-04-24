@@ -5,4 +5,3 @@ class Document:
         self.authors = authors
         self.metadata = metadata
         self.text = text
-        self.tokens = []
