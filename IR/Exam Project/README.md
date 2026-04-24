@@ -1,1 +1,1 @@
-# Exam Project Stub
+# Boolean Retrieval IR for the CRAN corpus
