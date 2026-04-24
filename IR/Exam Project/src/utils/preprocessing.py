@@ -1,8 +1,14 @@
+from functools import partial
+
 import nltk
 nltk.download('punkt_tab')
 
-def tokenize(text: str, normalization: bool = True) -> list[str]:
-    return nltk.word_tokenize(text.lower(), language="english") if normalization else nltk.word_tokenize(text, language="english")
+def tokenize(text: str, method: str = "regexp", normalization: bool = True) -> list[str]:
+    tokenizer = {
+        "word": nltk.word_tokenize,
+        "regexp": nltk.RegexpTokenizer(r'[A-Za-z]\w+').tokenize,
+    }[method]
+    return tokenizer(text.lower()) if normalization else tokenizer(text)
 
 def remove_stopwords(tokens: list[str], lang: str = "english") -> list[str]:
     return [word for word in tokens if word.isalnum() and word not in set(nltk.corpus.stopwords.words(lang))]
