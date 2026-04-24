@@ -1,4 +1,5 @@
 import nltk
+nltk.download('punkt_tab')
 
 def tokenize(text: str, normalization: bool = True) -> list[str]:
     return nltk.word_tokenize(text.lower(), language="english") if normalization else nltk.word_tokenize(text, language="english")
