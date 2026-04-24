@@ -1,10 +1,10 @@
 from document import Document
 
 class Corpus:
-    def __init__(self, path: str):
+    def __init__(self, type: str,  path: str):
         self.documents = []
         with open(path) as f:
-            self.documents = parse_NTIS(path)
+            self.documents = parse_NTIS(path) if type == "NTIS" else parse_NTIS(path)
 
 
 def parse_NTIS(path: str) -> list[Document]:
