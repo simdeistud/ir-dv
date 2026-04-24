@@ -5,3 +5,5 @@ class Document:
         self.authors = authors
         self.metadata = metadata
         self.text = text
+    def __repr__(self):
+        return str(self.__dict__)
