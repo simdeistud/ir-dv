@@ -1,4 +1,4 @@
-from document import Document
+from .document import Document
 
 class Corpus:
     def __init__(self, type: str,  path: str):
@@ -12,23 +12,15 @@ def parse_NTIS(path: str) -> list[Document]:
     doc = {}
     current_tag = None
 
-    tag_map = {
-        "I": "docID",
-        "T": "title",
-        "A": "authors",
-        "B": "metadata",
-        "W": "text"
-    }
     with open(path) as f:
         for line in f:
             line = line.rstrip()
             # New document starts
             if line.startswith(".I"):
+                print(f"adding document to corpus [{line[2:].strip()}]")
                 if doc:
                     # finalize previous document
-                    for k in doc:
-                        doc[k] = doc[k].strip()
-                    documents.append(Document(doc["docID"], doc["title"], doc["authors"], doc["metadata"], doc["text"]))
+                    documents.append(Document(doc["I"], doc["T"], doc["A"], doc["B"], doc["W"]))
                 doc = {"I": line[2:].strip()}
                 current_tag = "I"
             # Tag line (e.g. ".T", ".W", ...)
@@ -37,12 +29,12 @@ def parse_NTIS(path: str) -> list[Document]:
                 doc[current_tag] = ""
             # Content line
             elif current_tag:
-                doc[tag_map[current_tag]] += line + " "
+                doc[current_tag] += line + " "
 
         # append last document
         if doc:
             for k in doc:
                 doc[k] = doc[k].strip()
-            documents.append(Document(doc["docID"], doc["title"], doc["authors"], doc["metadata"], doc["text"]))
+            documents.append(Document(doc["I"], doc["T"], doc["A"], doc["B"], doc["W"]))
 
     return documents
