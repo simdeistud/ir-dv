@@ -6,14 +6,31 @@ from .utils.corpus import Corpus
 
 @total_ordering
 class Posting:
-    def __init__(self, docID: str):
+    def __init__(self, docID: str, positional_idx: set[int] = None):
         self.docID = docID
+        self._positional_idx = set() if positional_idx is None else positional_idx
+    def merge(self, other: Posting | int) -> None:
+        # We merge together the two positional indexes in place
+        if isinstance(other, Posting):
+            self._positional_idx.update(other._positional_idx)
+        # We add the index to the positional indexes in place
+        if isinstance(other, int):
+            self._positional_idx.add(other)
+        raise TypeError
     def __hash__(self):
         return hash(self.docID)
     def __eq__(self, other):
         return self.docID == other.docID
     def __lt__(self, other):
         return self.docID < other.docID
+    def __add__(self, other: Posting | int) -> Posting:
+        # We merge together the two positional indexes
+        if isinstance(other, Posting):
+            return Posting(self.docID, self._positional_idx | other._positional_idx)
+        # We add the index to the positional indexes
+        if isinstance(other, int):
+            return Posting(self.docID, self._positional_idx | {other})
+        raise TypeError
     def __repr__(self):
         return str(self.docID)
 
