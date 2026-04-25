@@ -1,20 +1,19 @@
 import json
+from functools import total_ordering
+
 from .utils import preprocessing
 from .utils.corpus import Corpus
 
+@total_ordering
 class Posting:
     def __init__(self, docID: str):
         self.docID = docID
-
-    def __eq__(self, other):
-        return self.docID == other.docID
-
-    def __gt__(self, other):
-        return self.docID > other.docID
-
     def __hash__(self):
         return hash(self.docID)
-
+    def __eq__(self, other):
+        return self.docID == other.docID
+    def __lt__(self, other):
+        return self.docID < other.docID
     def __repr__(self):
         return str(self.docID)
 
