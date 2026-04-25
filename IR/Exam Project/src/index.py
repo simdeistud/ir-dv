@@ -8,81 +8,98 @@ from .utils.corpus import Corpus
 class Posting:
     def __init__(self, docID: str, positional_idx: set[int] = None):
         self.docID = docID
-        self._positional_idx = set() if positional_idx is None else positional_idx
+        if positional_idx is None:
+            self._positional_idx = set()
+        else:
+            self._positional_idx = positional_idx
+
     def merge(self, other: Posting | int) -> None:
         # We merge together the two positional indexes in place
         if isinstance(other, Posting):
+            if self is not other:
+                raise ValueError("Cannot merge postings of different documents")
             self._positional_idx.update(other._positional_idx)
         # We add the index to the positional indexes in place
-        if isinstance(other, int):
+        elif isinstance(other, int):
             self._positional_idx.add(other)
-        raise TypeError
+        else: raise TypeError
+
+    def positional_index(self) -> list[int]:
+        return sorted(self._positional_idx)
+
     def __hash__(self):
         return hash(self.docID)
     def __eq__(self, other):
         return self.docID == other.docID
     def __lt__(self, other):
         return self.docID < other.docID
-    def __add__(self, other: Posting | int) -> Posting:
-        # We merge together the two positional indexes
-        if isinstance(other, Posting):
-            return Posting(self.docID, self._positional_idx | other._positional_idx)
-        # We add the index to the positional indexes
-        if isinstance(other, int):
-            return Posting(self.docID, self._positional_idx | {other})
-        raise TypeError
     def __repr__(self):
         return str(self.docID)
 
 class PostingList:
-    def __init__(self, postings = None):
+    def __init__(self, postings: list[Posting] = None):
         if postings is None:
-            self.postings = set[Posting]()
+            self._postings = list[Posting]()
         else:
-            self.postings = postings
-    def __add__(self, other) -> PostingList:
+            self._postings = postings
+
+    def merge(self, other: PostingList | Posting) -> None:
         # We merge together the two posting lists
         if isinstance(other, PostingList):
-            return PostingList(self.postings | other.postings)
-        # We add the posting to the posting list
-        if isinstance(other, Posting):
-            return PostingList(self.postings | {other})
-        raise TypeError
+            for posting in other: self.merge(posting)
+        # We add posting to the posting list in place
+        elif isinstance(other, Posting):
+            # If the posting has the smallest docID, add it as first element
+            if other < self._postings[0]:
+                self._postings.insert(0, other)
+            # If the posting has the biggest docID, append it
+            elif other > self._postings[-1]:
+                self._postings.append(other)
+            else:
+                for i in range(1, len(self._postings)):
+                    # If the posting already exists, merge its positional index
+                    if self._postings[i] is other:
+                        self._postings[i].merge(other)
+                        break
+                    # If the posting sits between two postings, insert it
+                    if self._postings[i-1] < other < self._postings[i]:
+                        self._postings.insert(i, other)
+                        break
+        else: raise TypeError
+
     def __str__(self):
-        return str(self.postings)
+        return str(self._postings)
     def __len__(self):
-        return len(self.postings)
+        return len(self._postings)
     def __iter__(self):
-        return iter(self.postings)
+        return iter(self._postings)
 
 @total_ordering
 class Term:
     def __init__(self, value: str, posting_list: PostingList = None):
         self.value = value
         if posting_list is None:
-            self.posting_list = PostingList()
+            self._posting_list = PostingList()
         else:
-           self.posting_list = posting_list
-    def add_posting(self, posting: Posting):
-        self.posting_list += posting
-    def merge_postings(self, postings: PostingList):
-        self.posting_list += postings
-    def __eq__(self, other):
-        return self.value == other.value
-    def __lt__(self, other):
-        return self.value < other.value
-    def __add__(self, other) -> Term:
+            self._posting_list = posting_list
+
+    def merge(self, other: Term) -> None:
         # We merge together the two posting lists given the same term
         if isinstance(other, Term):
             if self is not other:
                 raise ValueError
-            return Term(self.value, self.posting_list + other.posting_list)
+            self._posting_list.merge(other._posting_list)
         else:
             raise TypeError
+
+    def __eq__(self, other):
+        return self.value == other.value
+    def __lt__(self, other):
+        return self.value < other.value
     def __str__(self):
         return self.value
     def __repr__(self):
-        return f"{self.value} : {self.posting_list}"
+        return f"{self.value} : {self._posting_list}"
 
 class InvertedPermutermIndex:
     def __init__(self):
@@ -97,7 +114,7 @@ class InvertedPermutermIndex:
             for t in types:
                 if f"{t}$" not in self._dictionary:
                     self._dictionary[f"{t}$"] = Term(t)
-                self._dictionary[f"{t}$"] += Term(t, PostingList({Posting(document.docID)}))
+                self._dictionary[f"{t}$"].merge(Term(t, PostingList([Posting(document.docID)])))
             # Now we map all the rotations of each base term to the same Term object (to avoid posting list duplication)
             for k in self._dictionary.keys():
                 permuterms = self._get_permutations(k)
