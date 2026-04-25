@@ -18,18 +18,20 @@ class Posting:
         return str(self.docID)
 
 class PostingList:
-    def __init__(self):
-        self.postings = set[Posting]()
-
-    def add_posting(self, posting: Posting):
-        self.postings.add(posting)
-        self.postings = self.postings
-
-    def merge(self, other: PostingList):
-        self.postings.union(other.postings)
-        self.postings = self.postings
-
-    def __repr__(self):
+    def __init__(self, postings = None):
+        if postings is None:
+            self.postings = set[Posting]()
+        else:
+            self.postings = postings
+    def __add__(self, other) -> PostingList:
+        # We merge together the two posting lists
+        if isinstance(other, PostingList):
+            return PostingList(self.postings | other.postings)
+        # We add the posting to the posting list
+        if isinstance(other, Posting):
+            return PostingList(self.postings | {other})
+        raise TypeError
+    def __str__(self):
         return str(self.postings)
 
 class Index:
