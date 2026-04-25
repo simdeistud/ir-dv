@@ -33,6 +33,39 @@ class PostingList:
         raise TypeError
     def __str__(self):
         return str(self.postings)
+    def __len__(self):
+        return len(self.postings)
+    def __iter__(self):
+        return iter(self.postings)
+
+@total_ordering
+class Term:
+    def __init__(self, value: str, posting_list: PostingList = None):
+        self.value = value
+        if posting_list is None:
+            self.posting_list = PostingList()
+        else:
+           self.posting_list = posting_list
+    def add_posting(self, posting: Posting):
+        self.posting_list += posting
+    def merge_postings(self, postings: PostingList):
+        self.posting_list += postings
+    def __eq__(self, other):
+        return self.value == other.value
+    def __lt__(self, other):
+        return self.value < other.value
+    def __add__(self, other) -> Term:
+        # We merge together the two posting lists given the same term
+        if isinstance(other, Term):
+            if self is not other:
+                raise ValueError
+            return Term(self.value, self.posting_list + other.posting_list)
+        else:
+            raise TypeError
+    def __str__(self):
+        return self.value
+    def __repr__(self):
+        return f"{self.value} : {self.posting_list}"
 
 class Index:
     def __init__(self):
