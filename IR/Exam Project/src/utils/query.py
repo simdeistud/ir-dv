@@ -4,7 +4,7 @@ from dataclasses import dataclass
 # ---------- Query nodes ----------
 @dataclass
 class Atom:
-    value: str
+    value: str | list[str]
 
 @dataclass
 class Not:
@@ -20,17 +20,16 @@ class Or:
     left: object
     right: object
 
-
-# ---------- Tokenizer ----------
-TOKEN_SPEC = re.compile(
-    r"\s*(AND|OR|NOT|\(|\)|[A-Za-z0-9_]+)\s*",
-    re.IGNORECASE
-)
-
-def tokenize(s):
-    tokens = TOKEN_SPEC.findall(s)
-    return [t.upper() if t.upper() in {"AND", "OR", "NOT"} else t for t in tokens]
-
+def tokenize(s: str, method: str = "regexp", normalization: bool = True):
+    tokenizer = {
+        "word": nltk.word_tokenize,
+        "regexp": nltk.RegexpTokenizer(r'[A-Za-z]\w+').tokenize,
+    }[method]
+    tokens = tokenizer(s)
+    if normalization:
+        return [t if t in {"AND", "OR", "NOT"} else t.lower() for t in tokens]
+    else:
+        return tokens
 
 # ---------- Parser ----------
 class BooleanParser:
