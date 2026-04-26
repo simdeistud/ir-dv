@@ -92,6 +92,9 @@ class Term:
         else:
             raise TypeError
 
+    def posting_list(self) -> PostingList:
+        return self._posting_list
+
     def __eq__(self, other):
         return self.value == other.value
     def __lt__(self, other):
@@ -141,3 +144,6 @@ class InvertedPermutermIndex:
     def save(self, path: str):
         with open(path, "w") as f:
             json.dump(self._dictionary, f)
+
+    def __getitem__(self, term) -> PostingList:
+        return self._dictionary[term].posting_list()
