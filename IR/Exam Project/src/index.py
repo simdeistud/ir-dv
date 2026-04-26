@@ -101,23 +101,35 @@ class Term:
     def __repr__(self):
         return f"{self.value} : {self._posting_list}"
 
+
+def _get_permuterms(term: str) -> set[str]:
+    rotations = {term}
+    for i in range(0, len(term)):
+        term = term[1:] + term[0]
+        rotations.add(term)
+    return rotations
+
+
 class InvertedPermutermIndex:
     def __init__(self):
         self._dictionary: dict[str, Term] = {}
+        # We keep a set of all the docIDs to make answering NOT queries simpler
         self._postings_idx = set[Posting]()
 
     def build(self, corpus: Corpus):
         for document in corpus.documents:
             print(f"adding document to index [{document.docID}]")
-            types = set(preprocessing.tokenize(document.title + " " + document.text))
+            tokens = preprocessing.tokenize(document.title + " " + document.text)
             # First we add the base permutation (term$) of each term to the dictionary
-            for t in types:
+            i: int = 0
+            for t in tokens:
                 if f"{t}$" not in self._dictionary:
                     self._dictionary[f"{t}$"] = Term(t)
-                self._dictionary[f"{t}$"].merge(Term(t, PostingList([Posting(document.docID)])))
+                self._dictionary[f"{t}$"].merge(Term(t, PostingList([Posting(document.docID, {i})])))
+                i += 1
             # Now we map all the rotations of each base term to the same Term object (to avoid posting list duplication)
             for k in self._dictionary.keys():
-                permuterms = self._get_permutations(k)
+                permuterms = _get_permuterms(k)
                 for permuterm in permuterms:
                     self._dictionary[permuterm] = self._dictionary[k]
             self._postings_idx.add(Posting(document.docID))
@@ -129,11 +141,3 @@ class InvertedPermutermIndex:
     def save(self, path: str):
         with open(path, "w") as f:
             json.dump(self._dictionary, f)
-
-    def _get_permutations(self, term: str) -> set[str]:
-        rotations = {term}
-        for i in range(0, len(term)):
-            term = term[1:] + term[0]
-            rotations.add(term)
-        return rotations
-
