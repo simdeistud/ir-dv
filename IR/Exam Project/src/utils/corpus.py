@@ -2,9 +2,10 @@ from .document import Document
 
 class Corpus:
     def __init__(self, type: str,  path: str):
-        self.documents = []
-        with open(path) as f:
-            self.documents = parse_NTIS(path) if type == "NTIS" else parse_NTIS(path)
+        self.documents: list[Document] = []
+        self.documents = parse_NTIS(path) if type == "NTIS" else parse_NTIS(path)
+    def __iter__(self):
+        return iter(self.documents)
 
 
 def parse_NTIS(path: str) -> list[Document]:
