@@ -1,4 +1,4 @@
-import re
+import nltk
 from dataclasses import dataclass
 
 # ---------- Query nodes ----------
@@ -31,7 +31,8 @@ def tokenize(s: str, method: str = "regexp", normalization: bool = True):
     else:
         return tokens
 
-# ---------- Parser ----------
+OPERATORS = {"AND", "OR", "NOT", "(", ")"}
+
 class BooleanParser:
     def __init__(self, tokens):
         self.tokens = tokens
@@ -48,10 +49,10 @@ class BooleanParser:
         return current
 
     def parse(self):
-        query = self.expr()
+        node = self.expr()
         if self.peek() is not None:
             raise SyntaxError("Unexpected token")
-        return query
+        return node
 
     # expr := term (OR term)*
     def expr(self):
@@ -69,23 +70,32 @@ class BooleanParser:
             node = And(node, self.factor())
         return node
 
-    # factor := NOT factor | '(' expr ')' | ATOM
+    # factor := NOT factor | '(' expr ')' | PHRASE_ATOM
     def factor(self):
         tok = self.peek()
+
         if tok == "NOT":
             self.consume("NOT")
             return Not(self.factor())
+
         elif tok == "(":
             self.consume("(")
             node = self.expr()
             self.consume(")")
             return node
-        elif tok is not None:
-            self.consume()
-            return Atom(tok)
-        else:
+
+        elif tok is None:
             raise SyntaxError("Unexpected end of input")
 
+        # ---- PHRASE ATOM ----
+        tokens = []
+        while self.peek() is not None and self.peek() not in OPERATORS:
+            tokens.append(self.consume())
+
+        if not tokens:
+            raise SyntaxError("Expected atom")
+
+        return Atom(tokens[0] if len(tokens) == 1 else tokens)
 
 # ---------- Convenience ----------
 def parse_boolean_query(query: str):
