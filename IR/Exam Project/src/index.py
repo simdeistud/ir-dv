@@ -104,3 +104,45 @@ class InvertedPermutermIndex:
 
     def __len__(self):
         return len(self._index)
+
+class InvertedKGramIndex:
+    def __init__(self, k: int):
+        # The main index is an ordered list of Terms
+        self._index: dict[str, PostingList] = {}
+        self._kgram_index: dict[str, set[str]] = {}
+        self._k = k
+        # We keep a set of all the docIDs to make answering NOT queries simpler
+        self._postings_idx: set[str] = set()
+
+    def build(self, corpus: Corpus) -> None:
+        for document in corpus:
+            print(f"adding document to index [{document.docID}]")
+            tokens = preprocessing.tokenize(document.title + " " + document.text)
+            # First we add all the base terms to the main index
+            i = 0  # Keep track of token position to fill positional index of every posting
+            for t in tokens:
+                current = PostingList({document.docID: [i]})
+                if t in self._index:
+                    self._index[t].merge(current)
+                else:
+                    self._postings_idx.add(document.docID)  # We add the posting to the index
+                    self._index[t] = current
+                i += 1
+        for term in self._index:
+            kgrams = self._get_kgrams(f"${term}$")
+            for kgram in kgrams:
+                if kgram in self._kgram_index: self._kgram_index[kgram].add(term)
+                else: self._kgram_index[kgram] = set(term)
+
+    def _get_kgrams(self, term: str) -> set[str]:
+        kgrams: set[str] = set()
+        for i in range(0, len(term)-self._k):
+            kgrams.add(term[i:] + term[:i+self._k])
+        print(kgrams)
+        return kgrams
+
+    def __getitem__(self, item: str) -> list[PostingList]:
+        return [self._index[term] for term in self._kgram_index[item]] if item in self._kgram_index else [PostingList()]
+
+    def __len__(self):
+        return len(self._index)
