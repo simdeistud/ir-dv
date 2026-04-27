@@ -55,7 +55,7 @@ class InvertedIndex:
                 i += 1
 
     def __getitem__(self, item):
-        return self._index[item]
+        return self._index[item] if item in self._index else PostingList()
 
     def __len__(self):
         return len(self._index)
@@ -64,34 +64,43 @@ class InvertedPermutermIndex:
     def __init__(self):
         # The main index is an ordered list of Terms
         self._index: dict[str, PostingList] = {}
+        self._permuterm_index: dict[str, str] = {}
         # We keep a set of all the docIDs to make answering NOT queries simpler
-        self._postings_idx: set[Posting] = set()
+        self._postings_idx: set[str] = set()
 
-    def build(self, corpus: Corpus):
+    def build(self, corpus: Corpus) -> None:
         for document in corpus:
             print(f"adding document to index [{document.docID}]")
             tokens = preprocessing.tokenize(document.title + " " + document.text)
             # First we add all the base terms to the main index
+            i = 0  # Keep track of token position to fill positional index of every posting
             for t in tokens:
-                posting = Posting(document.docID)
-                self._postings_idx.add(posting) # We add the posting to the index
+                current = PostingList({document.docID: [i]})
                 if t in self._index:
-                    self._index[t].merge(posting)
+                    self._index[t].merge(current)
                 else:
-                    self._index[t] = PostingList([Posting(document.docID)])
+                    self._postings_idx.add(document.docID)  # We add the posting to the index
+                    self._index[t] = current
+                i += 1
+        for term in self._index:
+            permuterms = self._get_permuterms(term)
+            for permuterm in permuterms:
+                self._permuterm_index[permuterm] = term
 
-    def _get_permuterms(self, term: str) -> list[str]:
-        rotations = {f"{term}$"}
+    def _get_permuterms(self, term: str) -> set[str]:
+        rotation = f"{term}$"
+        rotations = {rotation}
         for i in range(0, len(term)):
-            term = term[1:] + term[0]
-            rotations.add(term)
-        return list(rotations)
+            rotation = rotation[1:] + rotation[0]
+            rotations.add(rotation)
+        return rotations
 
-    def get(self, term: str) -> Term:
-        return self._index[self._index.index(Term(term))]
-
-    def get_matchings(self, term: str) -> list[Term]:
-        return [match for match in self._index if match.value.startswith(term)]
+    def __getitem__(self, item: str) -> PostingList | list[PostingList]:
+        if item[-1] == "*":
+            prefix = item[:-1]
+            terms = set(self._permuterm_index[match] for match in self._permuterm_index if match.startswith(prefix))
+            return [self._index[term] for term in terms]
+        else: return self._index[item] if item in self._index else PostingList()
 
     def __len__(self):
         return len(self._index)
