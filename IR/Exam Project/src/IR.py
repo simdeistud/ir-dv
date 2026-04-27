@@ -39,17 +39,17 @@ class BooleanIR:
 
         raise TypeError(f"Unknown value {query}")
 
-    def _term(self, term: str) -> set[Posting]:
+    def _term(self, term: str) -> set[str]:
         if "*" in term:
             raise NotImplementedError("Wildcards are not supported")
         return set(self.index[term])
 
-    def _not(self, p: set[Posting]) -> set[Posting]:
+    def _not(self, p: set[str]) -> set[str]:
         return self.index._postings_idx - p
 
-    def _and(self, lp: set[Posting], rp: set[Posting]) -> set[Posting]:
+    def _and(self, lp: set[str], rp: set[str]) -> set[str]:
         return lp & rp
 
-    def _or(self, lp: set[Posting], rp: set[Posting]) -> set[Posting]:
+    def _or(self, lp: set[str], rp: set[str]) -> set[str]:
         return lp | rp
 
