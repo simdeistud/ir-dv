@@ -23,7 +23,7 @@ class Or:
 def tokenize(s: str, method: str = "regexp", normalization: bool = True):
     tokenizer = {
         "word": nltk.word_tokenize,
-        "regexp": nltk.RegexpTokenizer(r'[A-Za-z]\w+').tokenize,
+        "regexp": nltk.RegexpTokenizer(r'[A-Za-z*]+').tokenize,
     }[method]
     tokens = tokenizer(s)
     if normalization:
