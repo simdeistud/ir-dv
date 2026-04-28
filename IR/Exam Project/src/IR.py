@@ -154,9 +154,9 @@ class BooleanPermutermIR:
     def _or(self, lp: set[str], rp: set[str]) -> set[str]:
         return lp | rp
 
-class BooleanPermutermIR:
-    def __init__(self, path: str):
-        self.index = InvertedPermutermIndex()
+class BooleanKGRamIR:
+    def __init__(self, path: str, k: int):
+        self.index = InvertedKGramIndex(k)
         self.index.build(Corpus("NTIS", path))
 
     def prepare_query(self, querystr: str):
@@ -209,21 +209,7 @@ class BooleanPermutermIR:
 
         raise TypeError(f"Unknown value {query}")
 
-    def _term(self, term: str) -> PostingList | list[PostingList]:
-        if "*" in term:
-            if term.count("*") > 1:
-                raise NotImplementedError("Permuterm index doesn't support multiple wildcards in the same term")
-            # We rotate the term so the wildcard is at the end
-            rotated = term
-            while rotated[-1] != "*":
-                rotated = rotated[-1] + rotated[:-1]
-            # We obtain the posting list of all the terms which match the rotated wild card
-            postings: list[PostingList] = self.index[rotated]
-            # Now we merge the posting lists
-            result = PostingList()
-            for posting in postings:
-                result.merge(posting)
-            return result
+    def _term(self, term: str) -> PostingList:
         return self.index[term]
 
     def _not(self, p: set[str]) -> set[str]:
