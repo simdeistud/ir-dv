@@ -138,9 +138,8 @@ class InvertedKGramIndex:
         if len(item) < self._k:
             raise ValueError(f"Cannot generate k-grams of strings shorter than {self._k} characters")
         kgrams: set[str] = set()
-        for i in range(0, len(item)-self._k):
-            kgrams.add(item[i:] + item[:i+self._k])
-        print(kgrams)
+        for i in range(0, len(item)-self._k+1):
+            kgrams.add(item[i:i+self._k])
         return kgrams
 
     def get_from_term(self, term: str) -> PostingList:
