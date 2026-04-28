@@ -134,15 +134,49 @@ class InvertedKGramIndex:
                 if kgram in self._kgram_index: self._kgram_index[kgram].add(term)
                 else: self._kgram_index[kgram] = set(term)
 
-    def _get_kgrams(self, term: str) -> set[str]:
+    def _get_kgrams(self, item: str) -> set[str]:
+        if len(item) < self._k:
+            raise ValueError(f"Cannot generate k-grams of strings shorter than {self._k} characters")
         kgrams: set[str] = set()
-        for i in range(0, len(term)-self._k):
-            kgrams.add(term[i:] + term[:i+self._k])
+        for i in range(0, len(item)-self._k):
+            kgrams.add(item[i:] + item[:i+self._k])
         print(kgrams)
         return kgrams
 
-    def __getitem__(self, item: str) -> list[PostingList]:
-        return [self._index[term] for term in self._kgram_index[item]] if item in self._kgram_index else [PostingList()]
+    def get_from_term(self, term: str) -> PostingList:
+        return self._index[term] if term in self._index else PostingList()
+
+    def get_from_kgram(self, kgram: str) -> PostingList:
+        result: PostingList = PostingList()
+        if kgram in self._kgram_index:
+            for term in self._kgram_index[kgram]:
+                result.merge(self.get_from_term(term))
+        return result
+
+    def __getitem__(self, item: str) -> PostingList:
+        result: PostingList = PostingList()
+        # If the search term doesn't contain a wildcard, we simply obtain its k-grams, find the common term by intersection, and merge their posting lists
+        if "*" not in item:
+            kgrams = self._get_kgrams(f"${item}$")
+            # We find all the common term by intersection
+            common_termset: set[str] = set(self._index)
+            for kgram in kgrams:
+                common_termset.intersection(self._kgram_index[kgram])
+            # We merge the posting lists of the terms
+            for term in common_termset:
+                result.merge(self.get_from_term(term))
+        # If the search term contains a wildcard, we split it into substrings and then intersect their results
+        else:
+            # TODO: separate this code
+            common_termset: set[str] = set(self._index)
+            for substring in f"${item}$".split("*"):
+                kgrams = self._get_kgrams(substring)
+                for kgram in kgrams:
+                    common_termset.intersection(self._kgram_index[kgram])
+                # We merge the posting lists of the terms
+                for term in common_termset:
+                    result.merge(self.get_from_term(term))
+        return result
 
     def __len__(self):
         return len(self._index)
