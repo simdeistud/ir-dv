@@ -85,7 +85,7 @@ class BooleanPermutermIR:
         if isinstance(query, Atom):
             # SINGLE TERM QUERY
             if isinstance(query.value, str):
-                return self._term(query.value)
+                return sorted(set(self._term(query.value)))
             # PHRASE QUERY
             elif isinstance(query.value, list):
                 intersection_list: list[PostingList] = []
@@ -166,7 +166,7 @@ class BooleanKGRamIR:
         if isinstance(query, Atom):
             # SINGLE TERM QUERY
             if isinstance(query.value, str):
-                return self._term(query.value)
+                return sorted(set(self._term(query.value)))
             # PHRASE QUERY
             elif isinstance(query.value, list):
                 intersection_list: list[PostingList] = []
