@@ -15,7 +15,7 @@ class BooleanIR:
         if isinstance(query, Atom):
             # SINGLE TERM QUERY
             if isinstance(query.value, str):
-                return self._term(query.value)
+                return sorted(self._term(query.value))
             # PHRASE QUERY
             elif isinstance(query.value, list):
                 intersection_list: list[PostingList] = []
@@ -38,7 +38,7 @@ class BooleanIR:
                         if phrase_found:
                             intersection.add(docID)
                             break
-                return intersection
+                return sorted(intersection)
             else:
                 raise TypeError
 
@@ -108,7 +108,7 @@ class BooleanPermutermIR:
                         if phrase_found:
                             intersection.add(docID)
                             break
-                return intersection
+                return sorted(intersection)
             else:
                 raise TypeError
 
@@ -133,7 +133,7 @@ class BooleanPermutermIR:
             if term.count("*") > 1:
                 raise NotImplementedError("Permuterm index doesn't support multiple wildcards in the same term")
             # We rotate the term so the wildcard is at the end
-            rotated = term
+            rotated = f"{term}$"
             while rotated[-1] != "*":
                 rotated = rotated[-1] + rotated[:-1]
             # We obtain the posting list of all the terms which match the rotated wild card
@@ -189,7 +189,7 @@ class BooleanKGRamIR:
                         if phrase_found:
                             intersection.add(docID)
                             break
-                return intersection
+                return sorted(intersection)
             else:
                 raise TypeError
 
