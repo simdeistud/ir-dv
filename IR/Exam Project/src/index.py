@@ -160,7 +160,7 @@ class InvertedKGramIndex:
             # We find all the common term by intersection
             common_termset: set[str] = set(self._index)
             for kgram in kgrams:
-                common_termset.intersection(self._kgram_index[kgram])
+                common_termset.intersection_update(self._kgram_index[kgram])
             # We merge the posting lists of the terms
             for term in common_termset:
                 result.merge(self.get_from_term(term))
@@ -169,9 +169,12 @@ class InvertedKGramIndex:
             # TODO: separate this code
             common_termset: set[str] = set(self._index)
             for substring in f"${item}$".split("*"):
+                # If the wildcard is at the start or end, the substring will be just "$", so we can skip it
+                if substring == "$":
+                    continue
                 kgrams = self._get_kgrams(substring)
                 for kgram in kgrams:
-                    common_termset.intersection(self._kgram_index[kgram])
+                    common_termset.intersection_update(self._kgram_index[kgram])
                 # We merge the posting lists of the terms
                 for term in common_termset:
                     result.merge(self.get_from_term(term))
