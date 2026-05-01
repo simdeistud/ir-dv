@@ -3,6 +3,9 @@ from .document import *
 class Corpus:
     def __init__(self):
         self._documents = []
+    
+    def build(self, path: str):
+        pass
         
     def __iter__(self):
         return iter(self._documents)

@@ -85,6 +85,9 @@ class PermutermIndex:
 
     def __getitem__(self, permuterm: str) -> str:
         return self._permuterm_index[permuterm] if permuterm in self._permuterm_index else ""
+    
+    def __iter__(self):
+        return iter(self._permuterm_index)
 
 class KGramIndex:
     def __init__(self, k: int):
@@ -110,3 +113,6 @@ class KGramIndex:
 
     def __getitem__(self, kgram: str) -> set[str]:
         return self._kgram_index[kgram] if kgram in self._kgram_index else set()
+    
+    def __iter__(self):
+        return iter(self._kgram_index)
