@@ -37,8 +37,8 @@ print(f"NOT query: '{q5}'")
 print(f"Boolean   : " + str(ir1.retrieve(q5)))
 print(f"Permuterm : " + str(ir2.retrieve(q5)))
 print(f"K-gram    : " + str(ir3.retrieve(q5)))
-q6 = "newtonian AND (subsequent OR NOT the)"
-print(f"Complex query: '{q6}'")
+q6 = "(newtonian AND subsequent) OR NOT the"
+print(query.parse_boolean_query(q6))
 print(f"Boolean   : " + str(ir1.retrieve(q6)))
 print(f"Permuterm : " + str(ir2.retrieve(q6)))
 print(f"K-gram    : " + str(ir3.retrieve(q6)))
