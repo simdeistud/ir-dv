@@ -5,7 +5,7 @@ from .utils import preprocessing
 from .utils.corpus import *
 
 class PostingList:
-    def __init__(self, postings: dict[str, list[int]] = None):
+    def __init__(self, postings: dict[str, list[int]] | None = None):
         if postings:
             self._postings: dict[str, list[int]] = postings
             for docID in self._postings:
@@ -41,7 +41,7 @@ class InvertedIndex:
 
     def build(self, corpus: Corpus) -> None:
         for document in corpus:
-            print(f"adding document to index [{document.docID}]")
+            print(f"Adding document to index [{document.docID}]")
             tokens = preprocessing.tokenize(document.title + " " + document.main_text)
             # First we add all the base terms to the main index
             i = 0 # Keep track of token position to fill positional index of every posting
@@ -54,27 +54,28 @@ class InvertedIndex:
                     self._index[t] = current
                 i += 1
 
-    def __getitem__(self, item):
-        return self._index[item] if item in self._index else PostingList()
+    def __getitem__(self, term):
+        return self._index[term] if term in self._index else PostingList()
+    
+    def __iter__(self):
+        return iter(self._index)
 
     def __len__(self):
         return len(self._index)
 
-class InvertedPermutermIndex(InvertedIndex):
+class PermutermIndex:
     def __init__(self):
-        super().__init__()
-        # Create auxiliary index of permuterms
+        # Create index of permuterms
         self._permuterm_index: dict[str, str] = {}
 
-
-    def build(self, corpus: CranfieldCorpus) -> None:
-        super().build(corpus)
-        for term in self._index:
-            permuterms = self._get_permuterms(term)
+    def build(self, index: InvertedIndex) -> None:
+        for term in index:
+            permuterms = PermutermIndex._get_permuterms(term)
             for permuterm in permuterms:
                 self._permuterm_index[permuterm] = term
 
-    def _get_permuterms(self, term: str) -> set[str]:
+    @staticmethod
+    def _get_permuterms(term: str) -> set[str]:
         rotation = f"{term}$"
         rotations = {rotation}
         for i in range(0, len(term)):
@@ -82,70 +83,30 @@ class InvertedPermutermIndex(InvertedIndex):
             rotations.add(rotation)
         return rotations
 
-    def __getitem__(self, item: str) -> PostingList | list[PostingList]:
-        if item[-1] == "*":
-            prefix = item[:-1]
-            terms = set(self._permuterm_index[match] for match in self._permuterm_index if match.startswith(prefix))
-            return [self._index[term] for term in terms]
-        else: return self._index[item] if item in self._index else PostingList()
+    def __getitem__(self, permuterm: str) -> str:
+        return self._permuterm_index[permuterm] if permuterm in self._permuterm_index else ""
 
-class InvertedKGramIndex(InvertedIndex):
+class KGramIndex:
     def __init__(self, k: int):
-        super().__init__()
-        # Create auxiliary index of k-grams
+        # Create index of k-grams
         self._k = k
         self._kgram_index: dict[str, set[str]] = {}
         
-    def build(self, corpus: CranfieldCorpus) -> None:
-        super().build(corpus)
-        for term in self._index:
-            kgrams = self._get_kgrams(f"${term}$")
+    def build(self, index: InvertedIndex) -> None:
+        for term in index:
+            kgrams = KGramIndex._get_kgrams(f"${term}$", self._k)
             for kgram in kgrams:
                 if kgram in self._kgram_index: self._kgram_index[kgram].add(term)
                 else: self._kgram_index[kgram] = set(term)
 
-    def _get_kgrams(self, item: str) -> set[str]:
-        if len(item) < self._k:
-            raise ValueError(f"Cannot generate k-grams of strings shorter than {self._k} characters")
+    @staticmethod
+    def _get_kgrams(item: str, k: int) -> set[str]:
+        if len(item) < k:
+            raise ValueError(f"Cannot generate k-grams of strings shorter than {k} characters")
         kgrams: set[str] = set()
-        for i in range(0, len(item)-self._k+1):
-            kgrams.add(item[i:i+self._k])
+        for i in range(0, len(item)-k+1):
+            kgrams.add(item[i:i+k])
         return kgrams
 
-    def get_from_term(self, term: str) -> PostingList:
-        return self._index[term] if term in self._index else PostingList()
-
-    def get_from_kgram(self, kgram: str) -> PostingList:
-        result: PostingList = PostingList()
-        if kgram in self._kgram_index:
-            for term in self._kgram_index[kgram]:
-                result.merge(self.get_from_term(term))
-        return result
-
-    def __getitem__(self, item: str) -> PostingList:
-        result: PostingList = PostingList()
-        # If the search term doesn't contain a wildcard, we simply obtain its k-grams, find the common term by intersection, and merge their posting lists
-        if "*" not in item:
-            kgrams = self._get_kgrams(f"${item}$")
-            # We find all the common term by intersection
-            common_termset: set[str] = set(self._index)
-            for kgram in kgrams:
-                common_termset.intersection_update(self._kgram_index[kgram])
-            # We merge the posting lists of the terms
-            for term in common_termset:
-                result.merge(self.get_from_term(term))
-        # If the search term contains a wildcard, we split it into substrings and then intersect their results
-        else:
-            # TODO: separate this code
-            common_termset: set[str] = set(self._index)
-            for substring in f"${item}$".split("*"):
-                # If the wildcard is at the start or end, the substring will be just "$", so we can skip it
-                if substring == "$":
-                    continue
-                kgrams = self._get_kgrams(substring)
-                for kgram in kgrams:
-                    common_termset.intersection_update(self._kgram_index[kgram])
-                # We merge the posting lists of the terms
-                for term in common_termset:
-                    result.merge(self.get_from_term(term))
-        return result
+    def __getitem__(self, kgram: str) -> set[str]:
+        return self._kgram_index[kgram] if kgram in self._kgram_index else set()
