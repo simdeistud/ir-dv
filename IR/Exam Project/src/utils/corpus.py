@@ -1,43 +1,41 @@
-from .document import Document
+from .document import *
 
 class Corpus:
-    def __init__(self, type: str,  path: str):
-        self.documents: list[Document] = []
-        self.documents = parse_NTIS(path) if type == "NTIS" else parse_NTIS(path)
+    def __init__(self):
+        self._documents = []
+        
     def __iter__(self):
-        return iter(self.documents)
-
-
-def parse_NTIS(path: str) -> list[Document]:
-    documents = []
-    doc = {}
-    current_tag = None
-
-    with open(path) as f:
-        for line in f:
-            line = line.rstrip()
-            # New document starts
-            if line.startswith(".I"):
-                print(f"adding document to corpus [{line[2:].strip()}]")
-                if doc:
-                    # finalize previous document
-                    for k in doc:
-                        doc[k] = doc[k].strip()
-                    documents.append(Document(doc["I"], doc["T"], doc["A"], doc["B"], doc["W"]))
-                doc = {"I": line[2:].strip()}
-                current_tag = "I"
-            # Tag line (e.g. ".T", ".W", ...)
-            elif line.startswith(".") and len(line) == 2:
-                current_tag = line[1]
-                doc[current_tag] = ""
-            # Content line
-            elif current_tag:
-                doc[current_tag] += line + " "
-
-        # append last document
-        if doc:
-            for k in doc:
-                doc[k] = doc[k].strip()
-            documents.append(Document(doc["I"], doc["T"], doc["A"], doc["B"], doc["W"]))
-
-    return documents
+        return iter(self._documents)
+    
+class CranfieldCorpus(Corpus):
+    def __init__(self):
+        super().__init__()
+    
+    def build(self, path: str):
+        self._documents = CranfieldCorpus._parse(path)
+    
+    @staticmethod
+    def _parse(path: str) -> list[CranfieldDocument]:
+        documents: list[CranfieldDocument] = []
+        # Parse the Cranfield file to divide it into document chunks
+        # which will be parsed individually by the document class
+        # and added to the corpus accordingly.
+        with open(path) as f:
+            doc_raw_text: str = "" 
+            for line in f:
+                if line.startswith(".I"):
+                    # Special case for the first document
+                    if len(doc_raw_text) == 0:
+                        doc_raw_text = line
+                    else:
+                        # The next time we encounter .I it means our current document
+                        # has ended and we should parse it and add it to the corpus.
+                        document = CranfieldDocument(doc_raw_text)
+                        documents.append(document)
+                        doc_raw_text = line
+                else:
+                    doc_raw_text += line
+            # Add last document, since it ends with EOF and not another .I
+            document = CranfieldDocument(doc_raw_text)
+            documents.append(document)
+        return documents
