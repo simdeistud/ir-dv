@@ -1,10 +1,12 @@
+from functools import total_ordering
+
 class Document:
     def __init__(self, raw_text: str):
         self.raw_text = raw_text
     def __str__(self):
         return self.raw_text
 
-
+@total_ordering
 class IndexedDocument(Document):
     def __init__(self, raw_text: str, docID: int):
         super().__init__(raw_text)
