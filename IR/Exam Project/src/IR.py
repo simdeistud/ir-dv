@@ -1,3 +1,5 @@
+import pickle
+
 from .utils.query import Atom, Not, And, Or
 from .utils import query
 from .index import *
@@ -79,6 +81,13 @@ class BooleanIR:
 
     def _or(self, lp: set[str], rp: set[str]) -> set[str]:
         return lp | rp
+    
+    def save(self, path: str) -> None:
+        pickle.dump(self, open(path, "wb"))
+    
+    @staticmethod
+    def load(path: str) -> BooleanIR:
+        return pickle.load(open(path, "rb"))
 
 
 class BooleanPermutermIR(BooleanIR):
