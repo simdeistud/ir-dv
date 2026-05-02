@@ -92,10 +92,12 @@ class BooleanPermutermIR(BooleanIR):
 
     def _term_postings(self, s: str) -> PostingList:
         if "*" in s:
+            # If the query contains multiple wildcards, we extract the simplified query and use it
+            # to search for candidate terms in the permuterm index, which we then filter using regular expressions
             if s.count("*") > 1:
-                raise NotImplementedError("Permuterm index doesn't support multiple wildcards in the same term")
+                rotated = f"*{s.split('*')[-1]}$"
+            else: rotated = f"{s}$"
             # We rotate the term so the wildcard is at the end
-            rotated = f"{s}$"
             while rotated[-1] != "*":
                 rotated = rotated[-1] + rotated[:-1]
             # We remove the *
@@ -104,6 +106,13 @@ class BooleanPermutermIR(BooleanIR):
             prefix_permuterms = [permuterm for permuterm in self._permuterm_index if permuterm.startswith(prefix)]
             # We map the permuterms to the respective terms in the index and remove duplicates using a set
             terms: set[str] = set(self._permuterm_index[permuterm] for permuterm in prefix_permuterms)
+            # If there are multiple wildcards, we need to filter the terms using regular expressions, 
+            # since the permuterm index doesn't support multiple wildcards
+            if s.count("*") > 1:
+                pattern = re.escape(s)
+                pattern = pattern.replace(r'\*', '.*')
+                pattern = f"^{pattern}$"
+                terms = set(term for term in terms if re.match(pattern, term))
             # Now we merge the posting lists
             result = PostingList()
             for term in terms:
