@@ -42,6 +42,7 @@ class InvertedIndex:
     def build(self, corpus: Corpus) -> None:
         for document in corpus:
             print(f"Adding document to index [{document.docID}]")
+            # We merge the title and the main text of the document, since we want to search for query terms in both fields.
             tokens = preprocessing.tokenize(document.title + " " + document.main_text)
             # First we add all the base terms to the main index
             i = 0 # Keep track of token position to fill positional index of every posting
@@ -100,7 +101,7 @@ class KGramIndex:
             kgrams = KGramIndex._get_kgrams(f"${term}$", self._k)
             for kgram in kgrams:
                 if kgram in self._kgram_index: self._kgram_index[kgram].add(term)
-                else: self._kgram_index[kgram] = set(term)
+                else: self._kgram_index[kgram] = {term}
 
     @staticmethod
     def _get_kgrams(item: str, k: int) -> set[str]:

@@ -136,6 +136,7 @@ class BooleanKGRamIR(BooleanIR):
                     raise ValueError(f"Wildcards are too close (<{self._k})")
                 kgrams = KGramIndex._get_kgrams(split, self._k)
                 for kgram in kgrams:
+                    #print(f"Terms for k-gram '{kgram}': {self._kgram_index[kgram]}")
                     terms.intersection_update(self._kgram_index[kgram])
             # Since searching for k-grams may return false positives (wrong order, missing k-gram, etc.),
             # we use regular expressions on the set of candidate terms to filter out unwanted results     
