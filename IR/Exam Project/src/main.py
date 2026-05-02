@@ -3,7 +3,7 @@ from .IR import *
 from .utils import *
 from .utils.query import parse_boolean_query
 
-path="C:\\Users\\simon\\source\\repos\\ir-dv\\IR\\Exam Project\\data\\cran.all.1400"
+path="C:\\Users\\simone\\source\\repos\\ir-dv\\IR\\Exam Project\\data\\cran.all.1400"
 ir1 = BooleanIR()
 ir2 = BooleanPermutermIR()
 ir3 = BooleanKGRamIR(k=3)
