@@ -4,7 +4,7 @@ nltk.download('punkt_tab')
 def tokenize(text: str, method: str = "regexp", normalization: bool = True) -> list[str]:
     tokenizer = {
         "word": nltk.word_tokenize,
-        "regexp": nltk.RegexpTokenizer(r'[A-Za-z]\w+').tokenize,
+        "regexp": nltk.RegexpTokenizer(r'[A-Za-z]+').tokenize,
     }[method]
     return tokenizer(text.lower()) if normalization else tokenizer(text)
 
