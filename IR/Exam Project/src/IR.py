@@ -9,9 +9,12 @@ class BooleanIR:
     def __init__(self):
         self.index = InvertedIndex()
     
-    def build(self, path: str):
-        corpus: Corpus = CranfieldCorpus()
-        corpus.build(path)
+    def build(self, data: str | Corpus):
+        if isinstance(data, str):
+            corpus: Corpus = CranfieldCorpus()
+            corpus.build(data)
+        if isinstance(data, Corpus):
+            corpus = data
         self.index.build(corpus)
 
     def retrieve(self, querystr: str) -> list[str]:
@@ -95,8 +98,8 @@ class BooleanPermutermIR(BooleanIR):
         super().__init__()
         self._permuterm_index = PermutermIndex()
 
-    def build(self, path: str):
-        super().build(path)
+    def build(self, data: str | Corpus):
+        super().build(data)
         self._permuterm_index.build(self.index)
 
     def _term_postings(self, s: str) -> PostingList:
@@ -135,8 +138,8 @@ class BooleanKGRamIR(BooleanIR):
         self._k = k
         self._kgram_index = KGramIndex(self._k)
 
-    def build(self, path: str):
-        super().build(path)
+    def build(self, data: str | Corpus):
+        super().build(data)
         self._kgram_index.build(self.index)
 
     def _term_postings(self, s: str) -> PostingList:
