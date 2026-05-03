@@ -6,6 +6,9 @@ class Corpus:
     
     def build(self, path: str):
         pass
+
+    def __getitem__(self, index):
+        return self._documents[index]
         
     def __iter__(self):
         return iter(self._documents)
