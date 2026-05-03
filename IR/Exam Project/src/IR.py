@@ -130,7 +130,7 @@ class BooleanPermutermIR(BooleanIR):
         return self.index[s]
 
 class BooleanKGRamIR(BooleanIR):   
-    def __init__(self, k: int):
+    def __init__(self, k: int = 3):
         super().__init__()
         self._k = k
         self._kgram_index = KGramIndex(self._k)
