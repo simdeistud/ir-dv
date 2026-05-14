@@ -1,0 +1,7 @@
+,Min,Max,Mid,LogScale,Meaning
+Year,1900,2020,1960,False,""
+Income,300,180000,8000,True,"Per person (GDP/capita, PPP$ inflation-adjusted)"
+Life expectancy,0,90,45,False,Years
+Population,15000,2000000000,5000000,True,Total
+Fertility,0,10,5,False,Babies per woman
+Child mortality,1,800,40,True,0-5 year-olds dying per 1000 born
