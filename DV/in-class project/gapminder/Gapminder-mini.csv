@@ -1,0 +1,11 @@
+Country,Region,Year,Income,Life expectancy,Population,Fertility,Child mortality
+Italy,Europe,2016,34735.0,82.97,60663068.0,1.532,3.29
+Italy,Europe,2017,35373.0,83.17,60673694.0,1.546,3.16
+Italy,Europe,2018,35739.0,83.33,60627291.0,1.559,3.03
+Italy,Europe,2019,35816.0,83.49,60550092.0,1.572,2.93
+Italy,Europe,2020,36084.0,83.64,60461828.0,1.585,2.83
+South Africa,Africa,2016,12246.0,64.44,56207649.0,2.314,36.58
+South Africa,Africa,2017,12233.0,66.31,57009751.0,2.29,35.26
+South Africa,Africa,2018,12143.0,66.64,57792520.0,2.268,33.8
+South Africa,Africa,2019,12039.0,66.93,58558267.0,2.246,32.94
+South Africa,Africa,2020,11986.0,67.19,59308690.0,2.225,32.09

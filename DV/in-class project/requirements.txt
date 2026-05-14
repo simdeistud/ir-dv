@@ -1,3 +1,5 @@
-dash==2.18.0
-plotly==6.0.0
 pandas
+numpy
+plotly
+dash
+ipykernel
