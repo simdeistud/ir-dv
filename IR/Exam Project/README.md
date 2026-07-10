@@ -8,3 +8,6 @@ The application can be started using `python -m src.main` from the project root 
 
 ## Test suite
 Inside `/benchmarks` there is a Jupyter notebook and an exported Markdown version presenting a series of tests of the IR on the Cranfield corpus.
+
+## Disclosure
+The code transforming the query to an AST was developed with the help of an LLM.
